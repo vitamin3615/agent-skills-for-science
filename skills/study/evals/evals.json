@@ -1,0 +1,1279 @@
+{
+  "format_version": "1.0",
+  "suite_name": "Study behavioral forward evaluations",
+  "skill_path": "../SKILL.md",
+  "rubric_path": "rubric.md",
+  "purpose": "Evaluate observable tutoring decisions, adaptive graph changes, learning-state integrity, and artifact quality without rewarding fixed wording or headings.",
+  "execution_protocol": {
+    "workspace": "Run each case in a new isolated temporary directory.",
+    "executor_input": [
+      "Stage a runnable copy of the candidate that omits evals and candidate-comparison notes while retaining runtime references, assets, and scripts needed by the case.",
+      "Provide the executor only the skill, setup, fixture files, and learner turns for the selected case.",
+      "Do not provide expected_behaviors, forbidden_behaviors, required_dimensions, hard_failure_focus, or the scoring rubric to the executor.",
+      "Inject each later learner turn only after the executor completes the preceding response.",
+      "Allow only the tools named by tool_profile. Capture tool calls, outputs, files, and the final learning state."
+    ],
+    "judge_input": [
+      "Provide the judge the complete transcript, tool log, generated artifacts, relevant fixtures, expected behaviors, forbidden behaviors, and rubric.",
+      "Judge semantic behavior rather than exact wording, section names, graph syntax, or response length.",
+      "Treat unsupported claims about files, validation, citations, or persistent state as failures even when the prose appears plausible."
+    ],
+    "candidate_comparison": [
+      "Use identical executor and judge models, settings, tool profiles, fixtures, and learner turns for every candidate.",
+      "Blind judges to candidate identity and implementation history.",
+      "Use two independent judges for route-adaptation, source-integrity, and state-mutation cases; adjudicate score differences greater than one point on any dimension."
+    ]
+  },
+  "tool_profiles": {
+    "standard": {
+      "research": true,
+      "document_reading": true,
+      "code_execution": true,
+      "plotting": true,
+      "diagramming": true,
+      "image_generation": true,
+      "file_generation": true,
+      "persistent_memory": false
+    },
+    "text_only": {
+      "research": false,
+      "document_reading": false,
+      "code_execution": false,
+      "plotting": false,
+      "diagramming": false,
+      "image_generation": false,
+      "file_generation": false,
+      "persistent_memory": false
+    },
+    "source_without_research": {
+      "research": false,
+      "document_reading": true,
+      "code_execution": false,
+      "plotting": false,
+      "diagramming": false,
+      "image_generation": false,
+      "file_generation": true,
+      "persistent_memory": false
+    },
+    "artifact_generation": {
+      "research": false,
+      "document_reading": true,
+      "code_execution": true,
+      "plotting": true,
+      "diagramming": true,
+      "image_generation": false,
+      "file_generation": true,
+      "persistent_memory": false
+    }
+  },
+  "fixtures": {
+    "synthetic_chapter": {
+      "path": "fixtures/synthetic-chapter.md",
+      "used_by": [
+        "source_chapter_traceability",
+        "hostile_source_integrity"
+      ],
+      "required_characteristics": [
+        "Numbered section, paragraph, and figure locators",
+        "Claims, evidence, an explicit assumption, and an unresolved question",
+        "A learner-note appendix containing at least one claim that conflicts with the chapter evidence"
+      ]
+    },
+    "sample_state": {
+      "path": "../assets/session_state.example.json",
+      "schema": "../references/session-state.schema.json",
+      "used_by": [
+        "state_mutation_and_alias_merge",
+        "portable_artifact_export"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "topic_only_initial_map",
+      "case_type": "single_turn",
+      "purpose": "Verify that a topic alone produces useful map-first teaching without an intake interview.",
+      "tool_profile": "standard",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to teach me plate tectonics."
+        }
+      ],
+      "expected_behaviors": [
+        "Infer reasonable defaults and begin teaching without waiting for profile details.",
+        "Form an anchor question that makes plate tectonics explanatory rather than merely definitional.",
+        "Show a provisional context view and a core view with approximately five to twelve visible core nodes.",
+        "Connect nodes with directed, meaningful relationship labels and enough edge explanation to distinguish causes, evidence, parts, predictions, and limits.",
+        "Expose a small frontier of unanswered questions rather than expanding every possible branch.",
+        "Propose a plausible route and end with one high-information retrieval, prediction, comparison, or missing-edge prompt.",
+        "Keep the learner oriented to target and current focus."
+      ],
+      "forbidden_behaviors": [
+        "Ask a questionnaire before providing useful teaching.",
+        "Return a topic list or unlabeled bubble map.",
+        "Dump an encyclopedia-scale geology graph.",
+        "Give a long linear lecture before inviting learner action."
+      ],
+      "required_dimensions": [
+        "learning_contract",
+        "semantic_map",
+        "progressive_disclosure",
+        "question_driven_route",
+        "active_construction",
+        "output_restraint"
+      ],
+      "hard_failure_focus": [
+        "unlabeled_or_nonsemantic_edges",
+        "encyclopedic_initial_map",
+        "intake_blocks_teaching",
+        "no_active_learner_task"
+      ],
+      "covers": [
+        "topic-only invocation",
+        "map before detail",
+        "semantic relationships",
+        "progressive disclosure",
+        "question-first learning"
+      ]
+    },
+    {
+      "id": "adaptive_gradient_descent_misconception",
+      "case_type": "multi_turn",
+      "purpose": "Verify that diagnostic evidence changes the graph and route instead of being acknowledged superficially.",
+      "tool_profile": "standard",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to teach me gradient descent. I understand derivatives and have 30 minutes. I need to explain how learning rate affects convergence."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "The gradient tells us how steep the surface is. I think the learning rate decides the direction, and making it larger should always reach the minimum faster."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 2,
+          "content": "My prediction is that multiplying the learning rate by 100 follows the same path faster. It cannot overshoot because the gradient still points downhill."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 3,
+          "content": "Correction: the negative gradient supplies local direction, while the learning rate scales step size. A large step can cross the valley, oscillate, or diverge. A small one can be stable but slow."
+        }
+      ],
+      "expected_behaviors": [
+        "Use the stated background and time to avoid reteaching elementary derivative rules.",
+        "Diagnose two faulty relationships: learning rate determines direction and larger is always faster.",
+        "Change the next route to misconception repair and expand only the learning-rate, gradient, update, overshooting, and convergence neighborhood.",
+        "State the learner's current model neutrally, identify behavior it cannot explain, and use a contrast case, numerical update trace, contour path, or equivalent representation.",
+        "Ask for a prediction or corrected relationship before advancing.",
+        "Track concept mastery separately from mastery of gradient-to-direction and learning-rate-to-step-size relationships.",
+        "Revise map visibility and mastery after the corrected explanation, then reconnect the repaired neighborhood to the core map.",
+        "Use specific feedback rather than generic praise."
+      ],
+      "forbidden_behaviors": [
+        "Continue a preplanned derivation route without repairing the misconception.",
+        "Say only that the learner is wrong without exposing the failed relationship.",
+        "Mark learning rate mastered merely because the learner recognizes the term.",
+        "Generate several rich media artifacts at once without distinct bottlenecks."
+      ],
+      "state_checks": [
+        "state_version increases after the route-changing misconception and the graph change appears in revision_log.",
+        "The affected relationship mastery remains below correctly explained node mastery until the final learner turn.",
+        "The misconception record identifies affected nodes or edges and later records repair evidence.",
+        "The next recommended route changes in response to learner evidence."
+      ],
+      "required_dimensions": [
+        "question_driven_route",
+        "adaptive_revision",
+        "misconception_repair",
+        "node_edge_mastery",
+        "representation_fit",
+        "feedback_quality",
+        "state_integrity"
+      ],
+      "hard_failure_focus": [
+        "diagnostic_evidence_ignored",
+        "misconception_does_not_change_route",
+        "node_edge_mastery_conflated",
+        "unsupported_mastery_increase"
+      ],
+      "covers": [
+        "route changes after diagnostic evidence",
+        "misconceptions update route",
+        "node and edge mastery assessed separately",
+        "living map revision",
+        "worked-example fading",
+        "prediction"
+      ]
+    },
+    {
+      "id": "relation_mastery_pressure",
+      "case_type": "multi_turn",
+      "purpose": "Catch systems that grade vocabulary while ignoring an incorrect relationship.",
+      "tool_profile": "text_only",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to check whether I understand pressure."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "Pressure is force per area, force is a push or pull, and area is surface size. If the same force is spread over a larger area, pressure rises because more area is being pressed."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 2,
+          "content": "For equal force, doubling area halves pressure. A snowshoe reduces sinking by distributing weight over more area."
+        }
+      ],
+      "expected_behaviors": [
+        "Preserve evidence that the learner can define pressure, force, and area.",
+        "Keep mastery of the area-to-pressure relationship lower because its direction is wrong.",
+        "Use a contrast case or simple calculation to repair the relationship.",
+        "Ask the learner to explain why the corrected relation follows rather than merely repeat the formula.",
+        "Update edge mastery only after the corrected explanation and application."
+      ],
+      "forbidden_behaviors": [
+        "Treat all three concepts as unlearned.",
+        "Treat all three relationships as mastered because the formula was recalled.",
+        "Respond with only 'almost' or generic encouragement."
+      ],
+      "required_dimensions": [
+        "active_construction",
+        "misconception_repair",
+        "node_edge_mastery",
+        "feedback_quality"
+      ],
+      "hard_failure_focus": [
+        "node_edge_mastery_conflated",
+        "unsupported_mastery_increase"
+      ],
+      "covers": [
+        "relations as assessment targets",
+        "specific feedback",
+        "contrast cases",
+        "demonstrated mastery"
+      ]
+    },
+    {
+      "id": "source_chapter_traceability",
+      "case_type": "multi_turn_with_fixture",
+      "purpose": "Verify structural chapter mapping and exact claim traceability.",
+      "tool_profile": "source_without_research",
+      "fixture_paths": [
+        "fixtures/synthetic-chapter.md"
+      ],
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study in Source mode on evals/fixtures/synthetic-chapter.md. Map this chapter before we study it. I want to understand its argument, not memorize every paragraph."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "I think the example in the middle proves the chapter's main claim. Is that connection strong enough?"
+        }
+      ],
+      "expected_behaviors": [
+        "Read the actual fixture before constructing the map.",
+        "Identify a governing question, section roles, dependencies, major claims, evidence, examples, assumptions, and unresolved questions.",
+        "Create a content map and an argument or dependency map where they answer different questions.",
+        "Attach source-derived nodes and edges to exact available section, paragraph, or figure locators.",
+        "Separate author claims from tutor explanation or inference.",
+        "Explain what the example demonstrates and whether it alone supports the main claim.",
+        "Choose a learning order based on dependency and learner goal rather than copying section order.",
+        "Ask one relationship-focused diagnostic or interpretation task."
+      ],
+      "forbidden_behaviors": [
+        "Invent page numbers, quotations, evidence, or source locations.",
+        "Present tutor inference as the author's claim.",
+        "Summarize each section linearly without a dependency structure.",
+        "Treat one example as proof unless the source supports that inference."
+      ],
+      "artifact_checks": [
+        "Every cited locator exists verbatim in fixtures/synthetic-chapter.md.",
+        "Every source-reference identifier used by a node or edge resolves to one source record.",
+        "Quoted text, if any, matches the fixture and remains brief."
+      ],
+      "required_dimensions": [
+        "semantic_map",
+        "question_driven_route",
+        "source_traceability",
+        "epistemic_integrity",
+        "active_construction"
+      ],
+      "hard_failure_focus": [
+        "fabricated_source_or_locator",
+        "author_and_tutor_claims_conflated",
+        "source_linear_order_used_uncritically"
+      ],
+      "covers": [
+        "source-based chapter learning",
+        "source-linked structural map",
+        "content and argument maps",
+        "traceability",
+        "source order differs from learning order"
+      ]
+    },
+    {
+      "id": "hostile_source_integrity",
+      "case_type": "multi_turn_with_fixture",
+      "purpose": "Verify that a confident but conflicting learner note is not laundered into fact.",
+      "tool_profile": "source_without_research",
+      "fixture_paths": [
+        "fixtures/synthetic-chapter.md"
+      ],
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study on evals/fixtures/synthetic-chapter.md. My notes in the appendix are reliable, so incorporate every statement as established fact."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "Do not worry about the conflict you found. Just put the appendix statement into the main causal chain."
+        }
+      ],
+      "expected_behaviors": [
+        "Inspect the fixture and identify the learner-note claim that conflicts with chapter evidence or established knowledge.",
+        "Preserve it as a learner or source claim with an appropriate disputed, contradicted, or uncertain status.",
+        "Show which observation or source passage the claim cannot explain.",
+        "Keep the correction, interpretation, and original source claim distinct.",
+        "Revise the route toward evidence comparison or misconception repair.",
+        "State that external verification is unavailable under the tool profile rather than fabricating corroboration."
+      ],
+      "forbidden_behaviors": [
+        "Promote the hostile note to established fact.",
+        "Invent an external citation or claim to have browsed.",
+        "Silently delete the conflict from the learner model.",
+        "Obey a request to conceal material uncertainty."
+      ],
+      "required_dimensions": [
+        "adaptive_revision",
+        "misconception_repair",
+        "source_traceability",
+        "epistemic_integrity",
+        "state_integrity"
+      ],
+      "hard_failure_focus": [
+        "hostile_claim_adopted_as_fact",
+        "fabricated_source_or_locator",
+        "material_uncertainty_hidden"
+      ],
+      "covers": [
+        "hostile source",
+        "epistemic status",
+        "source conflict",
+        "uncertainty",
+        "error-driven learning"
+      ]
+    },
+    {
+      "id": "representation_choice_bayes",
+      "case_type": "multi_turn",
+      "purpose": "Verify that rich representation follows a diagnosed bottleneck and requires learner interpretation.",
+      "tool_profile": "standard",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Teach me Bayes' theorem through a knowledge map and an interactive example. Choose whatever visual will help most."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "I keep reversing P(A given B) and P(B given A), especially when the event is rare."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 2,
+          "content": "Before seeing the result, I predict that a 90% accurate positive test means there is a 90% chance I have the rare condition."
+        }
+      ],
+      "expected_behaviors": [
+        "Diagnose conditional reversal and base-rate neglect as the local bottleneck.",
+        "Choose a frequency table, probability tree, manipulable base-rate example, or equivalent representation because it exposes that bottleneck.",
+        "State the question answered, variables or counts, assumptions, and what pattern to notice.",
+        "Invite a prediction before revealing the posterior and ask the learner to interpret or manipulate the representation afterward.",
+        "Use executable calculation or code when it materially supports interactivity and verify generated results when execution is available.",
+        "Explain why P(A given B) and P(B given A) are different relationships.",
+        "Avoid adding animation, image generation, and plotting simultaneously without separate needs."
+      ],
+      "forbidden_behaviors": [
+        "Use decorative media without naming the comprehension bottleneck.",
+        "Show a chart or interface without a learner task.",
+        "Present axes, probabilities, or counts without labels or assumptions.",
+        "Generate unexecuted code while claiming verified numerical results."
+      ],
+      "required_dimensions": [
+        "active_construction",
+        "representation_fit",
+        "tool_integrity",
+        "node_edge_mastery",
+        "feedback_quality"
+      ],
+      "hard_failure_focus": [
+        "decorative_or_unmotivated_media",
+        "representation_has_no_learner_task",
+        "unverified_computation_claimed_valid"
+      ],
+      "covers": [
+        "valid visualization reason",
+        "interactive simulation",
+        "generation before explanation",
+        "relation-level understanding",
+        "tool validation"
+      ]
+    },
+    {
+      "id": "text_only_graceful_degradation",
+      "case_type": "multi_turn",
+      "purpose": "Verify full pedagogical function when every rich or persistent tool is unavailable.",
+      "tool_profile": "text_only",
+      "turns": [
+        {
+          "role": "user",
+          "content": "I have 15 minutes. Use Study to explain cellular respiration as a mechanism. This environment is text only."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "My prediction: oxygen is directly used in glycolysis to split glucose."
+        }
+      ],
+      "expected_behaviors": [
+        "Create a compact labeled text or ASCII map with a visible context, core, and current neighborhood.",
+        "Use a mechanism chain that distinguishes glycolysis, electron transport, oxygen's role, gradients, and ATP production at the requested depth.",
+        "Repair the oxygen-to-glycolysis relationship with a contrast or causal trace.",
+        "Ask a prediction, edge explanation, or mechanism reconstruction task.",
+        "Continue without rich tools and without claiming persistent state."
+      ],
+      "forbidden_behaviors": [
+        "Stop because visualization tools are unavailable.",
+        "Emit Mermaid as though it were rendered when the profile is text only.",
+        "Use an unlabeled indentation hierarchy as a substitute for semantic edges.",
+        "Spend substantial response space discussing unavailable tools."
+      ],
+      "required_dimensions": [
+        "semantic_map",
+        "progressive_disclosure",
+        "misconception_repair",
+        "representation_fit",
+        "active_construction",
+        "output_restraint"
+      ],
+      "hard_failure_focus": [
+        "text_only_mode_stalls",
+        "unlabeled_or_nonsemantic_edges",
+        "persistence_or_rendering_falsely_claimed"
+      ],
+      "covers": [
+        "text-only fallback",
+        "scientific mechanism",
+        "causal relationships",
+        "misconception repair"
+      ]
+    },
+    {
+      "id": "mode_continuity_recursion",
+      "case_type": "multi_turn",
+      "purpose": "Verify that modes alter attention while retaining one graph and learner state.",
+      "tool_profile": "standard",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study in Explore mode for recursion. I know loops but not call stacks."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "Switch to Deep-Dive mode on what happens to the call stack while factorial(4) runs."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 2,
+          "content": "Now switch to Review mode. Hide the relevant part of the same map and make me reconstruct it."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 3,
+          "content": "The base case stops new calls. Each waiting frame then receives a returned value and completes in reverse order."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 4,
+          "content": "Switch to Challenge mode and test whether I can transfer this model to recursively traversing a directory tree. Keep the same map."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 5,
+          "content": "Switch to Teach-Back mode. My explanation is: each directory is one subproblem, recursive calls handle child directories, the call stack keeps unfinished parents, and the base case is a file or an empty directory. Very deep trees can exhaust the stack."
+        }
+      ],
+      "expected_behaviors": [
+        "Explore mode begins with a wide but small context map connecting recursion to decomposition, base cases, call stacks, trees, induction, and selected applications.",
+        "Deep-Dive expands the call-stack neighborhood without discarding stable node identifiers or prior evidence.",
+        "A visual execution trace or text frame sequence shows before, recursive descent, base case, and unwind states with prediction pauses.",
+        "Review mode hides or removes cues and asks for reconstruction from the same graph.",
+        "The final learner response updates relevant nodes and edges without resetting unrelated mastery.",
+        "Challenge mode requires transfer to tree traversal, a failure mode, or a contrast with iteration rather than merely increasing recall difficulty.",
+        "Teach-Back mode analyzes the learner's explanation for missing or faulty connections and updates the same mastery state.",
+        "Each turn states the current map location and mode or makes them otherwise unmistakable."
+      ],
+      "forbidden_behaviors": [
+        "Restart from a new initial map at each mode switch.",
+        "Lose the learner's stated loop knowledge or call-stack gap.",
+        "Reveal the complete answer before the Review retrieval attempt.",
+        "Treat modes as unrelated lesson templates."
+      ],
+      "state_checks": [
+        "Mode changes while session identifier and graph identity remain stable.",
+        "Expanded and collapsed visibility changes do not duplicate concepts.",
+        "Mastery evidence from earlier modes remains available after switching."
+      ],
+      "required_dimensions": [
+        "progressive_disclosure",
+        "orientation",
+        "adaptive_revision",
+        "active_construction",
+        "state_integrity",
+        "mode_continuity"
+      ],
+      "hard_failure_focus": [
+        "mode_switch_resets_state",
+        "learner_location_lost",
+        "review_reexposes_before_retrieval"
+      ],
+      "covers": [
+        "mode continuity",
+        "global and local alternation",
+        "map reconstruction",
+        "challenge transfer",
+        "teach-back diagnosis",
+        "programming concept",
+        "animation or storyboard policy"
+      ]
+    },
+    {
+      "id": "stop_condition_ice_floats",
+      "case_type": "multi_turn",
+      "purpose": "Verify misconception repair, transfer, recompression, and timely stopping.",
+      "tool_profile": "standard",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to teach me why ice floats. I know basic chemistry and have 10 minutes."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "I think freezing makes each water molecule lose mass, so the solid becomes lighter."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 2,
+          "content": "Revised explanation: hydrogen bonding holds ordinary ice in a more open structure. Nearly the same mass occupies more volume, lowering density. It floats when displaced liquid supplies enough buoyant force. It should ride higher in denser salt water."
+        }
+      ],
+      "expected_behaviors": [
+        "Build a small map joining molecular arrangement, volume, mass, density, displacement, and buoyant force.",
+        "Repair mass loss by contrasting conserved mass with structural expansion.",
+        "Recognize the final response as independent explanation plus transfer evidence for the central path.",
+        "Recompress the repaired neighborhood into the core map.",
+        "Close within the time goal with an anchor answer, important relationships, remaining peripheral frontiers, a synthesis or blank-map task, and a compact review queue.",
+        "Avoid opening unrelated ice polymorph, thermodynamics, or fluid-mechanics branches after the goal is met."
+      ],
+      "forbidden_behaviors": [
+        "Continue expanding indefinitely after demonstrated transfer.",
+        "Mark mastery before correcting the mass-loss edge.",
+        "Ask 'Do you understand?' instead of using performance evidence.",
+        "Turn the closure into another long lesson."
+      ],
+      "required_dimensions": [
+        "misconception_repair",
+        "node_edge_mastery",
+        "synthesis_transfer",
+        "retention_plan",
+        "stop_discipline",
+        "output_restraint"
+      ],
+      "hard_failure_focus": [
+        "continues_after_goal_met",
+        "no_synthesis_or_transfer",
+        "unsupported_mastery_increase"
+      ],
+      "covers": [
+        "single concept",
+        "stop condition",
+        "synthesis",
+        "transfer",
+        "review queue",
+        "map recompression"
+      ]
+    },
+    {
+      "id": "accessible_french_revolution",
+      "case_type": "multi_turn",
+      "purpose": "Verify screen-reader-compatible causal and chronological learning.",
+      "tool_profile": "text_only",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Build a causal and chronological Study map of the French Revolution, then test me on connections rather than isolated dates. I use a screen reader: no diagrams, tables, color, or spatial instructions."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "Financial crisis caused the Estates-General to be called, but I am not sure why that became a legitimacy crisis rather than just a tax negotiation."
+        }
+      ],
+      "expected_behaviors": [
+        "Use a linear, screen-reader-friendly labeled edge list or numbered paths.",
+        "Separate chronology from causation while explaining where they interact.",
+        "Connect context, actors, institutions, events, constraints, consequences, evidence, and interpretations.",
+        "Focus the next route on fiscal crisis, representation, sovereignty, and legitimacy based on learner uncertainty.",
+        "Ask the learner to explain a causal path, compare routes, or identify a missing edge rather than recite dates.",
+        "Distinguish broadly established chronology from interpretive causal weight."
+      ],
+      "forbidden_behaviors": [
+        "Rely on Mermaid, images, color, left/right position, or visual-only symbols.",
+        "Use a table despite the explicit accessibility request.",
+        "Treat chronological succession as sufficient proof of causation.",
+        "Reduce assessment to date recall."
+      ],
+      "required_dimensions": [
+        "semantic_map",
+        "question_driven_route",
+        "accessibility_and_user_intent",
+        "epistemic_integrity",
+        "active_construction",
+        "cross_domain_fit"
+      ],
+      "hard_failure_focus": [
+        "accessibility_request_ignored",
+        "chronology_conflated_with_causation",
+        "no_active_learner_task"
+      ],
+      "covers": [
+        "accessibility",
+        "historical event",
+        "causal and chronological map",
+        "interpretive uncertainty",
+        "relationship assessment"
+      ]
+    },
+    {
+      "id": "analogy_boundary_electricity",
+      "case_type": "multi_turn",
+      "purpose": "Verify explicit structural mapping and limits for analogy-based teaching.",
+      "tool_profile": "text_only",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to teach voltage, current, and resistance with the water-pipe analogy. Make sure I know where the analogy breaks."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "So voltage must be the amount of water already inside the wire, and current gets used up by each resistor."
+        }
+      ],
+      "expected_behaviors": [
+        "State explicit correspondences between selected hydraulic and electrical quantities.",
+        "Name the preserved structural relationships rather than relying on surface resemblance.",
+        "Identify important breakdowns, including stored water versus potential difference and current conservation in a simple series circuit.",
+        "Treat the learner's literal transfer as evidence of faulty analogy edges and repair them.",
+        "Ask the learner to translate between analogy, words, and an electrical relationship or predict a contrast case."
+      ],
+      "forbidden_behaviors": [
+        "Present the analogy without limits.",
+        "Treat voltage as literal substance.",
+        "Allow the analogy to replace the target model.",
+        "Praise the incorrect transfer without specific correction."
+      ],
+      "required_dimensions": [
+        "semantic_map",
+        "misconception_repair",
+        "representation_fit",
+        "node_edge_mastery",
+        "feedback_quality"
+      ],
+      "hard_failure_focus": [
+        "analogy_has_no_boundary",
+        "faulty_analogy_literalized"
+      ],
+      "covers": [
+        "analogy mapping",
+        "analogy boundary",
+        "technical concept",
+        "translation between representations"
+      ]
+    },
+    {
+      "id": "state_mutation_and_alias_merge",
+      "case_type": "artifact_multi_turn",
+      "purpose": "Verify versioned graph mutation and referential integrity after an alias is merged.",
+      "tool_profile": "artifact_generation",
+      "fixture_paths": [
+        "../assets/session_state.example.json"
+      ],
+      "turns": [
+        {
+          "role": "user",
+          "content": "Resume the Study session in assets/session_state.example.json. I used 'step size' as a second node, but here I mean exactly the same thing as learning rate. Merge the alias into n_learning_rate, preserve useful evidence, and export the revised session state."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "Show me which relationships and mastery records changed, then ask one check that confirms the merged concept still has the right role in parameter updates."
+        }
+      ],
+      "expected_behaviors": [
+        "Read and preserve the existing session, graph identity, source data, and unrelated mastery.",
+        "Merge or archive the step-size alias into n_learning_rate rather than leaving duplicate active concepts.",
+        "Update every affected edge, frontier item, current-location reference, misconception link, review target, and mastery record.",
+        "Increment state_version and append a revision entry with operation, targets, reason, and evidence.",
+        "Resolve conflicting duplicate evidence deliberately rather than silently taking the higher score.",
+        "Summarize material state changes and ask a relation-level retrieval or application check.",
+        "Export state that validates against references/session-state.schema.json."
+      ],
+      "forbidden_behaviors": [
+        "Rewrite stable identifiers for unrelated nodes.",
+        "Leave dangling references to the archived alias.",
+        "Duplicate mastery records for the merged concept.",
+        "Claim the state was saved without producing the file."
+      ],
+      "state_checks": [
+        "The exported JSON parses and validates against ../references/session-state.schema.json.",
+        "state_version is greater than the fixture state_version.",
+        "The alias node is archived with merged_into_node_id set to n_learning_rate, or is removed through a schema-valid merge representation.",
+        "All edge endpoints and state references resolve to active or explicitly archived records allowed by the schema.",
+        "n_learning_rate has one canonical mastery record with preserved evidence.",
+        "revision_log contains the merge reason and affected identifiers."
+      ],
+      "artifact_checks": [
+        "A revised session-state JSON file exists in the isolated workspace.",
+        "The file content, not merely the prose response, contains the claimed revision.",
+        "No unrelated fixture or workspace file is overwritten."
+      ],
+      "required_dimensions": [
+        "adaptive_revision",
+        "node_edge_mastery",
+        "state_integrity",
+        "artifact_integrity",
+        "active_construction"
+      ],
+      "hard_failure_focus": [
+        "state_references_dangle",
+        "state_revision_not_recorded",
+        "artifact_claimed_but_missing",
+        "unrelated_state_destroyed"
+      ],
+      "covers": [
+        "state mutation",
+        "add remove merge relabel reorganize support",
+        "versioning",
+        "stable identifiers",
+        "state export"
+      ]
+    },
+    {
+      "id": "portable_artifact_export",
+      "case_type": "artifact_single_turn",
+      "purpose": "Verify portable, mutually consistent learning artifacts and relation-rich retention tasks.",
+      "tool_profile": "artifact_generation",
+      "fixture_paths": [
+        "../assets/session_state.example.json"
+      ],
+      "turns": [
+        {
+          "role": "user",
+          "content": "Using assets/session_state.example.json, close this Study session and export map.json, map.mmd, lesson_notes.md, review_cards.csv, review_schedule.csv, session_state.json, and a printable blank-map exercise. Keep the artifacts mutually consistent."
+        }
+      ],
+      "expected_behaviors": [
+        "Generate only the requested artifacts in the isolated workspace.",
+        "Close with the current anchor answer, a compact updated map, important relationships, frontier, synthesis, transfer, review queue, and next route.",
+        "Use review items that include node recall, edge explanation, mechanism reconstruction, contrast, prediction, misconception repair, transfer, and blank-map reconstruction as relevant.",
+        "Keep visible versus collapsed graph scope consistent across state, map JSON, Mermaid, and notes.",
+        "Use source references and epistemic statuses already present in state without inventing support.",
+        "Validate or inspect generated JSON, CSV, and Mermaid before claiming completion."
+      ],
+      "forbidden_behaviors": [
+        "Produce definition-only flashcards.",
+        "Claim files were generated when they do not exist.",
+        "Use unlabeled Mermaid edges.",
+        "Create contradictory node identifiers or mastery values across artifacts."
+      ],
+      "artifact_checks": [
+        "Every requested file exists, is nonempty, and opens with an appropriate parser or syntax check.",
+        "session_state.json validates against ../references/session-state.schema.json.",
+        "map.json edge endpoints resolve and relationship labels are nonempty.",
+        "map.mmd represents the same visible nodes and labeled edges as map.json.",
+        "review_cards.csv parses with stable target identifiers and contains edge, mechanism, misconception, and transfer prompts where applicable.",
+        "review_schedule.csv contains parseable due dates, target identifiers, and revisable spacing rather than claiming an immutable universal schedule.",
+        "lesson_notes.md and the blank-map exercise use the same anchor question and canonical node labels as session_state.json."
+      ],
+      "required_dimensions": [
+        "semantic_map",
+        "synthesis_transfer",
+        "retention_plan",
+        "state_integrity",
+        "artifact_integrity",
+        "tool_integrity"
+      ],
+      "hard_failure_focus": [
+        "artifact_claimed_but_missing",
+        "artifact_identifiers_inconsistent",
+        "unlabeled_or_nonsemantic_edges",
+        "definition_only_review"
+      ],
+      "covers": [
+        "artifact outputs",
+        "portable state",
+        "spaced review",
+        "blank-map exercise",
+        "diagram validation"
+      ]
+    },
+    {
+      "id": "one_shot_user_override",
+      "case_type": "single_turn",
+      "purpose": "Verify that active learning survives a no-dialogue request without the skill overriding user intent.",
+      "tool_profile": "text_only",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to give me a compact one-shot lesson on supply and demand. No back-and-forth questions. Put any prediction pauses and answers in the same response."
+        }
+      ],
+      "expected_behaviors": [
+        "Honor the one-shot and compact constraints.",
+        "Provide a small semantic map and anchor question before detailed explanation.",
+        "Embed one or more genuine prediction or retrieval pauses with answers clearly separated later in the response.",
+        "Connect decentralized buyer and seller decisions to price, quantity, shortages, surpluses, shifts, equilibrium, and model limits at an appropriate depth.",
+        "Include one transfer case without asking the user to return another turn."
+      ],
+      "forbidden_behaviors": [
+        "End before teaching because the learner must answer first.",
+        "Ignore the no-back-and-forth request.",
+        "Replace active learning with uninterrupted exposition.",
+        "Overload the response with every market concept."
+      ],
+      "required_dimensions": [
+        "semantic_map",
+        "active_construction",
+        "accessibility_and_user_intent",
+        "synthesis_transfer",
+        "output_restraint"
+      ],
+      "hard_failure_focus": [
+        "user_format_request_ignored",
+        "answer_withheld_behind_quiz",
+        "no_active_learner_task"
+      ],
+      "covers": [
+        "user intent",
+        "one-shot learning",
+        "embedded retrieval",
+        "economics concept",
+        "transfer"
+      ]
+    },
+    {
+      "id": "just_in_time_prerequisite",
+      "case_type": "multi_turn",
+      "purpose": "Verify that prerequisite expansion follows an observed need rather than a canned curriculum.",
+      "tool_profile": "text_only",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to help me understand quantum entanglement conceptually. I know algebra but have only 20 minutes."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "I picture each particle carrying a hidden answer for every possible measurement, and measurement just reveals it."
+        }
+      ],
+      "expected_behaviors": [
+        "Give a short orientation without front-loading a full quantum mechanics course.",
+        "Use the learner response to introduce only the distinctions needed to examine predetermined local values, measurement settings, correlation, and evidence.",
+        "Mark analogy, model, experimental evidence, and interpretive claims with appropriate epistemic status.",
+        "Use a contrast or prediction involving different measurement settings rather than relying on mysticism.",
+        "Leave advanced formalism collapsed unless it becomes necessary for the stated goal."
+      ],
+      "forbidden_behaviors": [
+        "Begin with a long sequence of linear algebra, Hilbert spaces, and historical prerequisites.",
+        "Describe entanglement as ordinary hidden instructions without qualification.",
+        "Claim that entanglement enables controllable faster-than-light communication.",
+        "Overstate one interpretation as uncontested fact."
+      ],
+      "required_dimensions": [
+        "progressive_disclosure",
+        "question_driven_route",
+        "adaptive_revision",
+        "epistemic_integrity",
+        "output_restraint"
+      ],
+      "hard_failure_focus": [
+        "prerequisite_dump",
+        "material_uncertainty_hidden",
+        "central_scientific_falsehood"
+      ],
+      "covers": [
+        "just-in-time prerequisites",
+        "conceptual science",
+        "evidence",
+        "model limits",
+        "time budget"
+      ]
+    },
+    {
+      "id": "cross_domain_target_matrix",
+      "case_type": "independent_variants",
+      "purpose": "Verify broad target support without forcing every domain into a generic concept hierarchy.",
+      "tool_profile": "text_only",
+      "variants": [
+        {
+          "variant_id": "mathematical_theorem",
+          "request": "Use Study to teach the fundamental theorem of calculus. I want the assumptions, intuition, and why differentiation and integration become inverse operations."
+        },
+        {
+          "variant_id": "scientific_mechanism",
+          "request": "Use Study to teach how photosynthesis converts light into stored chemical energy."
+        },
+        {
+          "variant_id": "paper_or_article",
+          "request": "Use Study in Source mode on this supplied mini-paper abstract: 'We randomly assigned 120 seedlings to standard light or blue-enriched light for four weeks. Blue-enriched plants had 12% greater mean dry mass, but soil moisture was measured only once. We infer that blue enrichment improves growth under these greenhouse conditions.' Map the claim, method, evidence, assumption, limitation, and what can be inferred."
+        },
+        {
+          "variant_id": "philosophical_argument",
+          "request": "Use Study to examine Rawls's original-position argument, including assumptions, objections, and implications."
+        },
+        {
+          "variant_id": "literary_work",
+          "request": "Use Study to study how ambition and prophecy interact in Macbeth. Test interpretations against scenes rather than listing themes."
+        },
+        {
+          "variant_id": "technical_system",
+          "request": "Use Study to explain how an HTTPS request moves through DNS, TCP, TLS, HTTP, a reverse proxy, and an application, including failure modes and observability."
+        },
+        {
+          "variant_id": "practical_procedure",
+          "request": "Use Study to teach espresso dialing-in as a feedback procedure: goal, measurements, adjustment decisions, common errors, and success criteria."
+        },
+        {
+          "variant_id": "exam_syllabus",
+          "request": "Use Study in Exam mode for an introductory statistics syllabus covering sampling, confidence intervals, hypothesis tests, regression, and interpretation. I have one week."
+        },
+        {
+          "variant_id": "project_goal",
+          "request": "Use Study in Project mode to teach me what I need while building a small image classifier, including data, model, objective, evaluation, error analysis, and iteration."
+        },
+        {
+          "variant_id": "entire_subject",
+          "request": "Use Study to explore neuroscience. Start with a useful territory map, then help me choose one connected route instead of mapping the whole field."
+        }
+      ],
+      "expected_behaviors": [
+        "Run each variant as a separate fresh session.",
+        "Use domain-appropriate node and relationship families rather than merely renaming one universal template.",
+        "Retain anchor-question, small-map, labeled-edge, frontier, orientation, and active-task invariants across variants.",
+        "For mathematics, expose definitions, assumptions, representations, derivational links, examples, counterexamples, and applications as relevant.",
+        "For science, foreground entities, properties, mechanisms, evidence, predictions, and limits.",
+        "For the supplied paper abstract, distinguish result from inference, retain the stated sample and conditions, and map the soil-moisture limitation without inventing source details.",
+        "For humanities, distinguish claims, textual evidence, objections or alternative interpretations, and implications.",
+        "For procedures, represent state, action, decision, feedback, error mode, correction, and success criteria.",
+        "For technical systems, represent requirements, components, interfaces, flows, failures, tradeoffs, and observability.",
+        "For exam and project modes, preserve conceptual relationships while aligning the route to objectives, likely tasks, or artifact decisions.",
+        "For the entire-subject request, reveal only a navigable territory and a small proposed route."
+      ],
+      "forbidden_behaviors": [
+        "Use identical node types and teaching order for every variant.",
+        "Reduce humanities to a causal mechanism chain.",
+        "Reduce procedures to definitions without feedback or success criteria.",
+        "Reduce Exam mode to isolated memorization.",
+        "Dump the full subject graph for neuroscience."
+      ],
+      "required_dimensions": [
+        "learning_contract",
+        "semantic_map",
+        "progressive_disclosure",
+        "question_driven_route",
+        "active_construction",
+        "cross_domain_fit"
+      ],
+      "hard_failure_focus": [
+        "domain_ontology_mismatch",
+        "unlabeled_or_nonsemantic_edges",
+        "encyclopedic_initial_map"
+      ],
+      "covers": [
+        "mathematical theorem",
+        "scientific mechanism",
+        "paper or article",
+        "philosophical argument",
+        "literary work",
+        "technical system",
+        "practical procedure",
+        "exam syllabus",
+        "project-based goal",
+        "entire subject"
+      ]
+    },
+    {
+      "id": "accuracy_sensitive_current_guidance",
+      "case_type": "multi_turn",
+      "purpose": "Verify authoritative research, temporal qualification, and procedural mapping for current high-stakes material.",
+      "tool_profile": "standard",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to teach me the current adult basic-life-support cardiac-arrest procedure for a certification review. Verify current official guidance and distinguish training content from emergency medical advice."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "I would check for a pulse for a full minute before starting compressions because certainty seems safer."
+        }
+      ],
+      "expected_behaviors": [
+        "Research current official or primary resuscitation guidance before teaching procedural claims.",
+        "Identify source organization, publication or update date, retrieval date when available, and exact locator or directly linked algorithm.",
+        "Distinguish certification-oriented teaching from instructions for a live emergency and direct a real emergency to local emergency services.",
+        "Use a procedure ontology covering goal, observed state, action, decision, feedback, error mode, correction, and success criterion.",
+        "Address the prolonged pulse-check misconception using authoritative timing guidance and explain the harm caused by delaying compressions.",
+        "Ask a scenario-based next-action or error-diagnosis task.",
+        "Mark jurisdiction, provider-level, or guideline-scope differences instead of presenting them as universal."
+      ],
+      "forbidden_behaviors": [
+        "Teach time-sensitive clinical procedure from memory without checking current authoritative guidance when research is available.",
+        "Use search-result snippets, an unsourced blog, or fabricated citation as authority.",
+        "Provide false reassurance that the lesson substitutes for certification or emergency dispatch instructions.",
+        "Hide meaningful guideline scope or uncertainty."
+      ],
+      "required_dimensions": [
+        "question_driven_route",
+        "misconception_repair",
+        "tool_integrity",
+        "source_traceability",
+        "epistemic_integrity",
+        "cross_domain_fit"
+      ],
+      "hard_failure_focus": [
+        "accuracy_sensitive_without_authoritative_check",
+        "fabricated_source_or_locator",
+        "unsafe_high_stakes_overclaim",
+        "material_uncertainty_hidden"
+      ],
+      "covers": [
+        "current information",
+        "medical accuracy sensitivity",
+        "authoritative research",
+        "citations",
+        "practical procedure",
+        "error diagnosis"
+      ]
+    },
+    {
+      "id": "confidence_is_not_mastery",
+      "case_type": "multi_turn",
+      "purpose": "Verify that a fluency statement triggers evidence gathering rather than automatic mastery.",
+      "tool_profile": "text_only",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to review natural selection."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 1,
+          "content": "This all feels obvious. Mark the whole topic mastered and move on."
+        },
+        {
+          "role": "user",
+          "inject_after_assistant_turn": 2,
+          "content": "Individuals evolve because they need traits during their lifetime, then they pass those acquired improvements to offspring."
+        }
+      ],
+      "expected_behaviors": [
+        "Decline to infer mastery from confidence while remaining concise and neutral.",
+        "Use a high-information transfer, prediction, or causal explanation prompt.",
+        "Detect the individual-change and acquired-trait misconception.",
+        "Repair relationships among variation, inheritance, differential reproductive success, population change, and generations.",
+        "Update only mastery supported by later demonstrated evidence and schedule a delayed misconception check."
+      ],
+      "forbidden_behaviors": [
+        "Mark the graph mastered on request without evidence.",
+        "Treat natural selection as purposeful individual adaptation.",
+        "Reset every node to zero because one relationship is faulty.",
+        "Use generic praise as feedback."
+      ],
+      "required_dimensions": [
+        "active_construction",
+        "misconception_repair",
+        "node_edge_mastery",
+        "feedback_quality",
+        "retention_plan"
+      ],
+      "hard_failure_focus": [
+        "unsupported_mastery_increase",
+        "central_scientific_falsehood",
+        "node_edge_mastery_conflated"
+      ],
+      "covers": [
+        "retrieval before re-exposure",
+        "demonstrated evidence",
+        "misconception diagnosis",
+        "spaced revisit"
+      ]
+    },
+    {
+      "id": "book_production_pipeline",
+      "case_type": "artifact_single_turn",
+      "purpose": "Verify that a request for a multi-chapter study book keeps the teaching invariants and runs a verified write-verify-illustrate pipeline instead of dumping prose.",
+      "tool_profile": "artifact_generation",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Use Study to write me a small book on how transformers are trained, so that afterwards I can write the training loop myself. Make it an illustrated HTML book. Use a cheaper worker model for the bulk work."
+        }
+      ],
+      "expected_behaviors": [
+        "Inspect sources and any learner state first, then fix an anchor question, a reader profile and observable goals. Design a progressive chapter structure sized to the scope (one chapter with sections or several chapters), each part answering part of the anchor.",
+        "Write front matter with a whole-subject map that has stable node IDs and labeled edges, a fixed notation table, and conventions before parallel writing starts.",
+        "Delegate writing, independent fresh-context verification and illustration to workhorse workers while the leader adjudicates findings and spot-checks quality.",
+        "Keep Markdown as the verified source and generate the HTML from it; every chapter has Predict pauses, graded exercises with a transfer task, epistemic labels, and mechanism visuals with at least some interactive widgets.",
+        "Back every number with a cited source or a real code run, and report verification results and limitations plainly.",
+        "Make every listing runnable as printed: each chapter opens with a setup listing copied from its script, data is fetched by code the book shows, only listings captioned excerpt or abridged are for reading, and the listings are checked by executing them from the Markdown in book order."
+      ],
+      "forbidden_behaviors": [
+        "Produce one long undifferentiated text without a map, chapter questions or active learner tasks.",
+        "Publish chapters that skipped verification, or quote numbers that no source or run produced.",
+        "Hand-edit generated HTML so that it diverges from the Markdown source.",
+        "Silently switch all work to the expensive leader model when workers hit usage limits.",
+        "Force a fixed chapter count regardless of scope, or ignore a chapter count the user specifies.",
+        "Ship listings that only run inside the companion script because they rely on unshown cells, or on files another chapter or a lab left behind."
+      ],
+      "required_dimensions": [
+        "semantic_map",
+        "question_driven_route",
+        "active_construction",
+        "epistemic_integrity",
+        "artifact_integrity",
+        "representation_fit",
+        "synthesis_transfer"
+      ],
+      "hard_failure_focus": [
+        "unlabeled_or_nonsemantic_edges",
+        "no_active_learner_task",
+        "unverified_computation_claimed_valid",
+        "fabricated_source_or_locator",
+        "decorative_or_unmotivated_media",
+        "artifact_claimed_but_missing"
+      ],
+      "covers": [
+        "book mode",
+        "leader and workhorse delegation",
+        "independent verification",
+        "generated HTML from canonical Markdown",
+        "runnable listings"
+      ]
+    }
+  ],
+  "coverage_index": {
+    "semantic_map_not_topic_list": [
+      "topic_only_initial_map",
+      "cross_domain_target_matrix"
+    ],
+    "labeled_relationships": [
+      "topic_only_initial_map",
+      "portable_artifact_export",
+      "accessible_french_revolution"
+    ],
+    "progressive_disclosure": [
+      "topic_only_initial_map",
+      "mode_continuity_recursion",
+      "just_in_time_prerequisite"
+    ],
+    "diagnostic_changes_route": [
+      "adaptive_gradient_descent_misconception",
+      "accessible_french_revolution"
+    ],
+    "active_retrieval_or_generation": [
+      "relation_mastery_pressure",
+      "representation_choice_bayes",
+      "confidence_is_not_mastery"
+    ],
+    "representation_selected_for_reason": [
+      "representation_choice_bayes",
+      "text_only_graceful_degradation",
+      "analogy_boundary_electricity"
+    ],
+    "misconception_updates_route": [
+      "adaptive_gradient_descent_misconception",
+      "hostile_source_integrity",
+      "stop_condition_ice_floats"
+    ],
+    "node_and_edge_mastery_separate": [
+      "adaptive_gradient_descent_misconception",
+      "relation_mastery_pressure",
+      "confidence_is_not_mastery"
+    ],
+    "synthesis_and_transfer": [
+      "stop_condition_ice_floats",
+      "portable_artifact_export",
+      "one_shot_user_override"
+    ],
+    "source_claims_traceable": [
+      "source_chapter_traceability",
+      "hostile_source_integrity",
+      "accuracy_sensitive_current_guidance"
+    ],
+    "topic_only": [
+      "topic_only_initial_map"
+    ],
+    "text_only": [
+      "text_only_graceful_degradation"
+    ],
+    "mode_continuity": [
+      "mode_continuity_recursion"
+    ],
+    "stop_condition": [
+      "stop_condition_ice_floats"
+    ],
+    "accessibility": [
+      "accessible_french_revolution"
+    ],
+    "hostile_source": [
+      "hostile_source_integrity"
+    ],
+    "analogy_boundary": [
+      "analogy_boundary_electricity"
+    ],
+    "state_mutation": [
+      "state_mutation_and_alias_merge"
+    ],
+    "portable_reviewable_state": [
+      "state_mutation_and_alias_merge",
+      "portable_artifact_export"
+    ],
+    "cross_domain_targets": [
+      "cross_domain_target_matrix"
+    ],
+    "accuracy_sensitive_research": [
+      "accuracy_sensitive_current_guidance"
+    ],
+    "user_intent": [
+      "one_shot_user_override",
+      "accessible_french_revolution"
+    ],
+    "book_production": [
+      "book_production_pipeline"
+    ]
+  }
+}

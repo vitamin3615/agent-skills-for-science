@@ -1,0 +1,21 @@
+{
+  "scale": 4,
+  "parts": [
+    {"name": "flagellum", "seeds": [[20, 200], [60, 230]], "smooth": "organ"},
+    {"name": "body", "seeds": [[150, 185], [300, 200], [360, 120]], "smooth": "organ"},
+    {"name": "membrane", "parent": "body", "seeds": [[230, 40]], "smooth": "organ", "draw": "trace"},
+    {"name": "cytoplasm", "parent": "membrane", "seeds": [[100, 110], [250, 150], [245, 145], [230, 135]], "smooth": "organ", "draw": "trace", "tolerance": 6},
+    {"name": "vacuole", "parent": "cytoplasm", "seeds": [[300, 110]]},
+    {"name": "er", "parent": "cytoplasm", "seeds": [[180, 130]], "smooth": "detail", "draw": "trace"},
+    {"name": "golgi", "parent": "cytoplasm", "seeds": [[120, 80]], "smooth": "detail", "draw": "trace"},
+    {"name": "nucleus", "parent": "cytoplasm", "seeds": [[155, 80], [220, 95]], "draw": "trace"},
+    {"name": "nucleus_ring", "parent": "nucleus", "seeds": [[165, 90]]},
+    {"name": "nucleoplasm", "parent": "nucleus_ring", "seeds": [[180, 75]], "draw": "trace"},
+    {"name": "nucleolus", "parent": "nucleoplasm", "seeds": [[182, 87]], "smooth": "detail"},
+    {"name": "mitochondrion_1", "parent": "cytoplasm", "seeds": [[285, 85]], "smooth": "detail", "draw": "trace"},
+    {"name": "mitochondrion_2", "parent": "cytoplasm", "seeds": [[215, 155]], "smooth": "detail", "draw": "trace"},
+    {"name": "centrosome", "parent": "cytoplasm", "seeds": [[237, 119]], "smooth": "detail", "tolerance": 20},
+    {"name": "membrane_rim", "colors": ["#a5f1f9"], "tolerance": 10, "draw": "strokes", "fill_holes": false, "close": 0, "smooth": "detail"},
+    {"name": "dark_dots", "colors": ["#0e223b"], "tolerance": 15, "smooth": "detail"}
+  ]
+}

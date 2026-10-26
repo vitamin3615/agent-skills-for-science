@@ -1,0 +1,4 @@
+interface:
+  display_name: "Study: Knowledge-Map-First Learning"
+  short_description: "Adaptive semantic-map learning and illustrated study books"
+  default_prompt: "Use $study to teach me a topic through a small living knowledge map and progressive questions."

@@ -1,0 +1,117 @@
+{
+  "json_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Experiment",
+    "type": "object",
+    "required": ["experiment_id","name","hypothesis","created_at","phase","mode"],
+    "properties": {
+      "experiment_id": {"type":"string","description":"UUIDv4"},
+      "name": {"type":"string"},
+      "description": {"type":"string"},
+      "hypothesis": {"type":"string","description":"Clear, falsifiable hypothesis"},
+      "owner": {"type":"string"},
+      "tags": {"type":"array","items":{"type":"string"}},
+      "phase": {"type":"integer","minimum":0,"maximum":10},
+      "phase_hint": {"type":"array","items":{"type":"integer","minimum":0,"maximum":10},"description":"Optional multi-phase mapping (backward-compatible)"},
+      "mode": {"type":"string","description":"Preserve existing mode names"},
+      "parameters": {"type":"object","additionalProperties":true},
+      "status": {"type":"string","enum":["draft","ready","running","completed","failed","archived"]},
+      "created_at": {"type":"string","format":"date-time"},
+      "started_at": {"type":"string","format":"date-time"},
+      "finished_at": {"type":"string","format":"date-time"},
+      "metrics": {
+        "type":"array",
+        "items": {
+          "type":"object",
+          "required":["name","value","timestamp"],
+          "properties":{
+            "name":{"type":"string"},
+            "value":{},
+            "unit":{"type":"string"},
+            "step":{"type":"integer"},
+            "timestamp":{"type":"string","format":"date-time"}
+          }
+        }
+      },
+      "artifacts": {"type":"array","items":{"type":"string","format":"uri"}},
+      "parent_experiment_id": {"type":"string"},
+      "notes": {"type":"string"},
+      "version": {"type":"string"}
+    },
+    "additionalProperties": false
+  },
+  "api_examples": {
+    "create_experiment": {
+      "method": "POST",
+      "path": "/api/experiments",
+      "payload": {
+        "experiment_id": "e3b0c442-98fc-1c14-9afb-4c5b8d6a5b0f",
+        "name": "Test creative prompt: cross-domain pairing",
+        "hypothesis": "Combining domain A and domain B prompts will increase novel idea rate by 25%",
+        "owner": "alice@example.com",
+        "tags": ["cross-disciplinary","little-bet"],
+        "phase": 2,
+        "mode": "ideation",
+        "created_at": "2026-01-23T18:00:00Z",
+        "status": "ready"
+      }
+    },
+    "run_experiment": {
+      "method": "POST",
+      "path": "/api/experiments/:experiment_id/runs",
+      "payload": {
+        "run_id": "run-0001",
+        "started_at": "2026-01-23T18:05:00Z",
+        "parameters": {"seed":42,"prompt_template":"cross_pair_v1"}
+      }
+    },
+    "record_metric": {
+      "method": "POST",
+      "path": "/api/experiments/:experiment_id/runs/:run_id/metrics",
+      "payload": {"name":"novelty_score","value":0.72,"unit":"[0-1]","timestamp":"2026-01-23T18:07:00Z"}
+    },
+    "analyze": {
+      "method": "POST",
+      "path": "/api/experiments/:experiment_id/analysis",
+      "payload": {"analysis_type":"summary","since":"2026-01-01T00:00:00Z"}
+    }
+  },
+  "telemetry_events": {
+    "schema": {
+      "type":"object",
+      "required":["event_type","timestamp","experiment_id"],
+      "properties":{
+        "event_type":{"type":"string","enum":["experiment.created","experiment.started","experiment.metric","experiment.completed","artifact.uploaded"]},
+        "timestamp":{"type":"string","format":"date-time"},
+        "experiment_id":{"type":"string"},
+        "run_id":{"type":"string"},
+        "payload":{"type":"object","additionalProperties":true}
+      },
+      "additionalProperties": false
+    },
+    "example": {"event_type":"experiment.metric","timestamp":"2026-01-23T18:07:00Z","experiment_id":"e3b0c442-98fc-1c14-9afb-4c5b8d6a5b0f","run_id":"run-0001","payload":{"name":"novelty_score","value":0.72}}
+  },
+  "cli_proposals": [
+    {"flag":"--experiment-name","type":"string","desc":"Human-friendly experiment name"},
+    {"flag":"--hypothesis","type":"string","desc":"Falsifiable hypothesis text"},
+    {"flag":"--phase","type":"int","desc":"Phase index (0-10)"},
+    {"flag":"--mode","type":"string","desc":"Existing mode name (backward-compatible)"},
+    {"flag":"--params","type":"json","desc":"JSON string of parameters for the run"},
+    {"flag":"--tags","type":"csv","desc":"Comma-separated tags"},
+    {"flag":"--track","type":"bool","desc":"Opt-in: enable experiment tracking (stores JSON locally and sends minimal telemetry if configured)"},
+    {"flag":"--storage","type":"string","desc":"storage backend: local|sqlite|s3|http (default: local)"},
+    {"flag":"--telemetry-endpoint","type":"string","desc":"Optional telemetry URL (HTTP)"},
+    {"flag":"--dry-run","type":"bool","desc":"Validate payloads without storing or sending telemetry"}
+  ],
+  "cli_example_call": "./run_idea.sh --experiment-name \"CrossPair v1\" --hypothesis \"Cross-domain pairing increases novelty\" --phase 2 --mode ideation --params '{\"seed\":42}' --tags cross-disciplinary,little-bet --track",
+  "implementation_checklist": [
+    "Add JSON Schema validator (unit tests) and include in CI",
+    "Implement local storage: write experiment JSON to .experiments/{experiment_id}.json",
+    "Wire CLI flags: parse and build payloads; ensure --track opt-in default false",
+    "Ensure backward-compatibility: scripts behave identically when --track is not used",
+    "Provide optional telemetry sender with env var TELEMETRY_URL and opt-out via TELEMETRY_DISABLED",
+    "Add simple analysis endpoint/script that summarizes runs and top metrics",
+    "Add basic docs and examples in /references/ and update SKILL.md (done)"
+  ],
+  "notes": "Reference files are stubs and must be filled with exact citations before publication to meet repository constraints. All storage defaults to local to minimize risk."
+}

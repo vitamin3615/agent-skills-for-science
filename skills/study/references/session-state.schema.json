@@ -1,0 +1,1899 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://study.local/schemas/session-state.schema.json",
+  "title": "Study session state",
+  "description": "Portable state for a living learner-specific semantic map. Cross-reference, connectivity, evidence, and revision invariants are additionally checked by the Study validation utility.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "state_version",
+    "created_at",
+    "updated_at",
+    "learning_target",
+    "anchor_question",
+    "learner_goal",
+    "learner_profile",
+    "time_budget",
+    "mode",
+    "phase",
+    "interaction_status",
+    "current_zoom_level",
+    "current_node_id",
+    "current_edge_id",
+    "current_question_id",
+    "current_location_path",
+    "route",
+    "nodes",
+    "edges",
+    "map_views",
+    "questions",
+    "prerequisite_frontier",
+    "question_frontier",
+    "unresolved_questions",
+    "mastery_by_node",
+    "mastery_by_edge",
+    "evidence",
+    "known_misconceptions",
+    "examples_seen",
+    "representations_used",
+    "review_queue",
+    "sources",
+    "source_references",
+    "generated_artifacts",
+    "session_summary",
+    "next_recommended_route",
+    "revision_log",
+    "extensions"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "session_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "state_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "updated_at": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "learning_target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "target_type", "scope", "source_ids", "extensions"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_type": {
+          "enum": [
+            "single_concept",
+            "textbook_chapter",
+            "paper_or_article",
+            "subject",
+            "mathematical_theorem",
+            "scientific_mechanism",
+            "historical_event",
+            "philosophical_argument",
+            "literary_work",
+            "technical_system",
+            "programming_concept",
+            "practical_procedure",
+            "exam_syllabus",
+            "project_goal",
+            "other"
+          ]
+        },
+        "scope": {
+          "type": "string"
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "anchor_question": {
+      "type": "string",
+      "minLength": 1
+    },
+    "learner_goal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "learner_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current_knowledge",
+        "desired_depth",
+        "preferred_modalities",
+        "mathematical_background",
+        "technical_background",
+        "theory_application_balance",
+        "assessment_requirements",
+        "accessibility_requirements",
+        "artifact_preferences",
+        "inferred_defaults",
+        "extensions"
+      ],
+      "properties": {
+        "current_knowledge": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "desired_depth": {
+          "enum": ["introductory", "intermediate", "advanced", "expert", "custom"]
+        },
+        "preferred_modalities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "concise_text",
+              "diagram",
+              "animation",
+              "data_visualization",
+              "simulation",
+              "executable_code",
+              "analogy",
+              "timeline",
+              "argument_map",
+              "worked_examples",
+              "hands_on"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "mathematical_background": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "technical_background": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "theory_application_balance": {
+          "enum": ["theory_first", "balanced", "application_first", "custom"]
+        },
+        "assessment_requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "accessibility_requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "artifact_preferences": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "inferred_defaults": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "time_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total_minutes", "remaining_minutes", "started_at", "ends_at", "persistence", "extensions"],
+      "properties": {
+        "total_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "remaining_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "started_at": {
+          "anyOf": [
+            {"$ref": "#/$defs/timestamp"},
+            {"type": "null"}
+          ]
+        },
+        "ends_at": {
+          "anyOf": [
+            {"$ref": "#/$defs/timestamp"},
+            {"type": "null"}
+          ]
+        },
+        "persistence": {
+          "enum": ["conversation_only", "persistent", "export_only"]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "mode": {
+      "enum": [
+        "explore",
+        "learn",
+        "deep_dive",
+        "review",
+        "challenge",
+        "source",
+        "exam",
+        "project",
+        "teach_back"
+      ]
+    },
+    "phase": {
+      "enum": [
+        "establish",
+        "orient",
+        "diagnose",
+        "plan",
+        "learn",
+        "repair",
+        "integrate",
+        "synthesize",
+        "transfer",
+        "retain",
+        "complete"
+      ]
+    },
+    "interaction_status": {
+      "enum": ["ready", "awaiting_learner", "paused", "complete"]
+    },
+    "current_zoom_level": {
+      "enum": ["context", "core", "neighborhood"]
+    },
+    "current_node_id": {
+      "$ref": "#/$defs/nullableIdentifier"
+    },
+    "current_edge_id": {
+      "$ref": "#/$defs/nullableIdentifier"
+    },
+    "current_question_id": {
+      "$ref": "#/$defs/nullableIdentifier"
+    },
+    "current_location_path": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/identifier"
+      },
+      "uniqueItems": true
+    },
+    "route": {
+      "$ref": "#/$defs/route"
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "map_views": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["context", "core", "neighborhood", "extensions"],
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/mapView"
+        },
+        "core": {
+          "$ref": "#/$defs/mapView"
+        },
+        "neighborhood": {
+          "$ref": "#/$defs/mapView"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/question"
+      }
+    },
+    "prerequisite_frontier": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/prerequisiteFrontierItem"
+      }
+    },
+    "question_frontier": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/identifier"
+      },
+      "uniqueItems": true
+    },
+    "unresolved_questions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/identifier"
+      },
+      "uniqueItems": true
+    },
+    "mastery_by_node": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/identifier"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/masteryRecord"
+      }
+    },
+    "mastery_by_edge": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/identifier"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/masteryRecord"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "known_misconceptions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/misconception"
+      }
+    },
+    "examples_seen": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/exampleSeen"
+      }
+    },
+    "representations_used": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/representation"
+      }
+    },
+    "review_queue": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reviewItem"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "source_references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/sourceReference"
+      }
+    },
+    "generated_artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "session_summary": {
+      "$ref": "#/$defs/sessionSummary"
+    },
+    "next_recommended_route": {
+      "anyOf": [
+        {"$ref": "#/$defs/routeRecommendation"},
+        {"type": "null"}
+      ]
+    },
+    "revision_log": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/revisionEvent"
+      }
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9._:-]*$"
+    },
+    "nullableIdentifier": {
+      "anyOf": [
+        {"$ref": "#/$defs/identifier"},
+        {"type": "null"}
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "epistemicStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "confidence", "note", "extensions"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "established_fact",
+            "definition",
+            "model",
+            "simplifying_assumption",
+            "interpretation",
+            "analogy",
+            "disputed_claim",
+            "uncertainty",
+            "open_question"
+          ]
+        },
+        "confidence": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "note": {
+          "type": ["string", "null"]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "relevance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "question_id", "explanation", "extensions"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "anchor",
+            "context",
+            "prerequisite",
+            "frontier_question",
+            "structure",
+            "mechanism",
+            "evidence",
+            "application",
+            "misconception",
+            "transfer",
+            "source_structure",
+            "learner_prior_knowledge"
+          ]
+        },
+        "question_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "type",
+        "learner_friendly_explanation",
+        "formal_explanation",
+        "importance",
+        "difficulty",
+        "prerequisite_status",
+        "epistemic_status",
+        "origin",
+        "source_reference_ids",
+        "relevance",
+        "lifecycle",
+        "merged_into_node_id",
+        "aliases",
+        "introduced_at_version",
+        "updated_at_version",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "concept",
+            "definition",
+            "fact",
+            "claim",
+            "principle",
+            "mechanism",
+            "process",
+            "entity",
+            "variable",
+            "equation",
+            "assumption",
+            "method",
+            "procedure",
+            "example",
+            "counterexample",
+            "analogy",
+            "misconception",
+            "evidence",
+            "application",
+            "limitation",
+            "open_question",
+            "event",
+            "actor",
+            "institution",
+            "theme",
+            "state",
+            "action",
+            "decision",
+            "component",
+            "interface",
+            "requirement",
+            "other"
+          ]
+        },
+        "learner_friendly_explanation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "formal_explanation": {
+          "type": ["string", "null"]
+        },
+        "importance": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "difficulty": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "prerequisite_status": {
+          "enum": ["not_applicable", "unknown", "frontier", "required", "satisfied"]
+        },
+        "epistemic_status": {
+          "$ref": "#/$defs/epistemicStatus"
+        },
+        "origin": {
+          "enum": ["source", "tutor_synthesis", "learner", "mixed"]
+        },
+        "source_reference_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "relevance": {
+          "$ref": "#/$defs/relevance"
+        },
+        "lifecycle": {
+          "enum": ["active", "merged", "archived"]
+        },
+        "merged_into_node_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "introduced_at_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "updated_at_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_node_id",
+        "target_node_id",
+        "relationship_type",
+        "label",
+        "explanation",
+        "directionality",
+        "importance",
+        "epistemic_status",
+        "origin",
+        "source_reference_ids",
+        "lifecycle",
+        "introduced_at_version",
+        "updated_at_version",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "source_node_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "target_node_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "relationship_type": {
+          "enum": [
+            "is_prerequisite_for",
+            "is_part_of",
+            "causes",
+            "enables",
+            "explains",
+            "is_evidence_for",
+            "is_measured_by",
+            "is_derived_from",
+            "is_instance_of",
+            "contrasts_with",
+            "is_analogous_to",
+            "predicts",
+            "is_limited_by",
+            "applies_to",
+            "is_commonly_confused_with",
+            "scales",
+            "depends_on",
+            "precedes",
+            "supports",
+            "challenges",
+            "corrects",
+            "custom"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 2,
+          "not": {
+            "enum": ["related", "related to", "related_to"]
+          }
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "directionality": {
+          "enum": ["directed", "bidirectional"]
+        },
+        "importance": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "epistemic_status": {
+          "$ref": "#/$defs/epistemicStatus"
+        },
+        "origin": {
+          "enum": ["source", "tutor_synthesis", "learner", "mixed"]
+        },
+        "source_reference_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "lifecycle": {
+          "enum": ["active", "archived"]
+        },
+        "introduced_at_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "updated_at_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "mapView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "purpose",
+        "visible_node_ids",
+        "visible_edge_ids",
+        "collapsed_node_ids",
+        "focus_node_id",
+        "expanded_by_request",
+        "display_limit_override_reason",
+        "extensions"
+      ],
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "visible_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "visible_edge_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "collapsed_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "focus_node_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "expanded_by_request": {
+          "type": "boolean"
+        },
+        "display_limit_override_reason": {
+          "type": ["string", "null"]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "text",
+        "layer",
+        "target_node_ids",
+        "target_edge_ids",
+        "status",
+        "priority",
+        "priority_reason",
+        "source_reference_ids",
+        "introduced_at_version",
+        "answered_by_evidence_ids",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layer": {
+          "enum": [
+            "orientation",
+            "structure",
+            "mechanism",
+            "formalization",
+            "evidence",
+            "contrast_and_boundaries",
+            "consequence_and_application",
+            "transfer",
+            "synthesis"
+          ]
+        },
+        "target_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "target_edge_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "status": {
+          "enum": ["open", "active", "answered", "deferred", "dropped"]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "priority_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_reference_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "introduced_at_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "answered_by_evidence_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "prerequisiteFrontierItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node_id", "blocking_question_id", "reason", "priority", "status", "extensions"],
+      "properties": {
+        "node_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "blocking_question_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "status": {
+          "enum": ["open", "active", "satisfied", "deferred"]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "rationale", "planned_question_ids", "started_at_version", "revisions", "extensions"],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/routeType"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "planned_question_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "started_at_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "revisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/routeRevision"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "routeType": {
+      "enum": [
+        "top_down_overview",
+        "bottom_up_foundations",
+        "problem_first",
+        "mechanism_first",
+        "example_first",
+        "proof_first",
+        "application_first",
+        "exam_focused",
+        "misconception_repair",
+        "project_driven",
+        "review_retrieval",
+        "transfer_challenge",
+        "source_structure",
+        "custom"
+      ]
+    },
+    "routeRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "occurred_at",
+        "from_type",
+        "to_type",
+        "reason",
+        "triggering_evidence_ids",
+        "state_version",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "occurred_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "from_type": {
+          "$ref": "#/$defs/routeType"
+        },
+        "to_type": {
+          "$ref": "#/$defs/routeType"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "triggering_evidence_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "state_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "occurred_at",
+        "question_id",
+        "task_type",
+        "prompt",
+        "learner_response_summary",
+        "outcome",
+        "support_level",
+        "demonstrated_capabilities",
+        "target_node_ids",
+        "target_edge_ids",
+        "feedback_summary",
+        "source_reference_ids",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "occurred_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "question_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "task_type": {
+          "enum": [
+            "retrieval",
+            "prediction",
+            "self_explanation",
+            "missing_edge",
+            "comparison",
+            "error_diagnosis",
+            "worked_example_completion",
+            "calculation",
+            "proof",
+            "application",
+            "transfer",
+            "teach_back",
+            "map_reconstruction",
+            "counterfactual",
+            "source_interpretation"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "learner_response_summary": {
+          "type": "string"
+        },
+        "outcome": {
+          "enum": ["incorrect", "partially_correct", "correct", "inconclusive", "not_attempted"]
+        },
+        "support_level": {
+          "enum": ["none", "light", "substantial", "full"]
+        },
+        "demonstrated_capabilities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "recognition",
+              "cued_explanation",
+              "independent_explanation",
+              "familiar_application",
+              "transfer",
+              "comparison",
+              "prediction",
+              "teaching",
+              "limit_recognition",
+              "misconception_evidence"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "target_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "target_edge_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "feedback_summary": {
+          "type": "string"
+        },
+        "source_reference_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "masteryRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "estimate_confidence",
+        "evidence_ids",
+        "last_reviewed_at",
+        "next_review_at",
+        "change_reason",
+        "extensions"
+      ],
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "estimate_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "last_reviewed_at": {
+          "anyOf": [
+            {"$ref": "#/$defs/timestamp"},
+            {"type": "null"}
+          ]
+        },
+        "next_review_at": {
+          "anyOf": [
+            {"$ref": "#/$defs/timestamp"},
+            {"type": "null"}
+          ]
+        },
+        "change_reason": {
+          "type": "string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "level": {"minimum": 1}
+            },
+            "required": ["level"]
+          },
+          "then": {
+            "properties": {
+              "evidence_ids": {"minItems": 1}
+            }
+          }
+        }
+      ]
+    },
+    "misconception": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "learner_model",
+        "status",
+        "implicated_node_ids",
+        "implicated_edge_ids",
+        "evidence_ids",
+        "cannot_explain",
+        "contrast_case",
+        "repair_question_id",
+        "route_revision_id",
+        "recheck_question_ids",
+        "resolved_by_evidence_id",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "learner_model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": ["suspected", "confirmed", "repairing", "monitoring", "repaired"]
+        },
+        "implicated_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "implicated_edge_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "cannot_explain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contrast_case": {
+          "type": ["string", "null"]
+        },
+        "repair_question_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "route_revision_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "recheck_question_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "resolved_by_evidence_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "exampleSeen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "context",
+        "target_node_ids",
+        "target_edge_ids",
+        "support_level",
+        "learner_task",
+        "evidence_id",
+        "source_reference_ids",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context": {
+          "type": "string"
+        },
+        "target_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "target_edge_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "support_level": {
+          "enum": ["worked", "partially_faded", "independent"]
+        },
+        "learner_task": {
+          "type": "string"
+        },
+        "evidence_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "source_reference_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "representation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "bottleneck",
+        "target_node_ids",
+        "target_edge_ids",
+        "question_answered",
+        "artifact_id",
+        "learner_task",
+        "text_fallback",
+        "status",
+        "learner_evidence_id",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "type": {
+          "enum": [
+            "semantic_diagram",
+            "spatial_diagram",
+            "generated_image",
+            "animation",
+            "storyboard",
+            "data_visualization",
+            "interactive_simulation",
+            "timeline",
+            "argument_map",
+            "equation",
+            "executable_code",
+            "notebook",
+            "analogy",
+            "decision_tree",
+            "sequence_diagram",
+            "comparison_table",
+            "text_map",
+            "other"
+          ]
+        },
+        "bottleneck": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "target_edge_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "question_answered": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "learner_task": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text_fallback": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": ["planned", "presented", "used", "validated"]
+        },
+        "learner_evidence_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "reviewItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "prompt",
+        "target_node_ids",
+        "target_edge_ids",
+        "misconception_id",
+        "success_criteria",
+        "status",
+        "due_at",
+        "interval_days",
+        "created_from_evidence_ids",
+        "source_reference_ids",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "kind": {
+          "enum": [
+            "node_recall",
+            "edge_explanation",
+            "mechanism_reconstruction",
+            "compare_and_contrast",
+            "prediction",
+            "misconception_check",
+            "transfer_problem",
+            "blank_map_reconstruction",
+            "source_trace"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "target_edge_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "misconception_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "success_criteria": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": ["queued", "scheduled", "due", "completed", "deferred"]
+        },
+        "due_at": {
+          "anyOf": [
+            {"$ref": "#/$defs/timestamp"},
+            {"type": "null"}
+          ]
+        },
+        "interval_days": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "created_from_evidence_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "source_reference_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "type", "location", "author", "supplied_by", "accessed_at", "notes", "extensions"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": ["book", "chapter", "paper", "article", "web_page", "notes", "transcript", "dataset", "lecture", "other"]
+        },
+        "location": {
+          "type": ["string", "null"]
+        },
+        "author": {
+          "type": ["string", "null"]
+        },
+        "supplied_by": {
+          "enum": ["learner", "agent_research", "workspace", "other"]
+        },
+        "accessed_at": {
+          "anyOf": [
+            {"$ref": "#/$defs/timestamp"},
+            {"type": "null"}
+          ]
+        },
+        "notes": {
+          "type": ["string", "null"]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "sourceLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section", "heading", "page", "paragraph", "equation", "figure", "table", "line_range", "timecode", "slide", "url", "extensions"],
+      "properties": {
+        "section": {
+          "type": ["string", "null"]
+        },
+        "heading": {
+          "type": ["string", "null"]
+        },
+        "page": {
+          "type": ["integer", "string", "null"],
+          "minimum": 1
+        },
+        "paragraph": {
+          "type": ["integer", "string", "null"],
+          "minimum": 1
+        },
+        "equation": {
+          "type": ["string", "null"]
+        },
+        "figure": {
+          "type": ["string", "null"]
+        },
+        "table": {
+          "type": ["string", "null"]
+        },
+        "line_range": {
+          "type": ["string", "null"]
+        },
+        "timecode": {
+          "type": ["string", "null"]
+        },
+        "slide": {
+          "type": ["integer", "string", "null"],
+          "minimum": 1
+        },
+        "url": {
+          "type": ["string", "null"],
+          "format": "uri"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "sourceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_id", "locator", "role", "supported_entity_type", "supported_entity_id", "note", "excerpt", "extensions"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "source_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "locator": {
+          "$ref": "#/$defs/sourceLocator"
+        },
+        "role": {
+          "enum": [
+            "author_claim",
+            "source_definition",
+            "source_evidence",
+            "source_example",
+            "source_assumption",
+            "tutor_context",
+            "tutor_explanation",
+            "tutor_inference",
+            "external_context",
+            "learner_note"
+          ]
+        },
+        "supported_entity_type": {
+          "enum": ["node", "edge", "question", "example", "representation", "summary"]
+        },
+        "supported_entity_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "excerpt": {
+          "type": ["string", "null"],
+          "maxLength": 500
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "path", "description", "created_from_state_version", "validated", "extensions"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "type": {
+          "enum": [
+            "session_state",
+            "map_json",
+            "mermaid",
+            "graphviz",
+            "lesson_notes",
+            "review_cards",
+            "review_schedule",
+            "notebook",
+            "interactive_html",
+            "simulation",
+            "animation",
+            "storyboard",
+            "blank_map",
+            "image",
+            "other"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_from_state_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "validated": {
+          "type": "boolean"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "sessionSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "current_anchor_answer",
+        "important_edge_ids",
+        "remaining_question_ids",
+        "synthesis_task",
+        "transfer_task",
+        "notes",
+        "extensions"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["not_started", "in_progress", "ready_to_close", "closed"]
+        },
+        "current_anchor_answer": {
+          "type": ["string", "null"]
+        },
+        "important_edge_ids": {
+          "type": "array",
+          "maxItems": 7,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "remaining_question_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "synthesis_task": {
+          "type": ["string", "null"]
+        },
+        "transfer_task": {
+          "type": ["string", "null"]
+        },
+        "notes": {
+          "type": ["string", "null"]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "routeRecommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "reason", "next_question_ids", "next_node_ids", "recommended_mode", "extensions"],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/routeType"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "next_question_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "next_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "recommended_mode": {
+          "enum": [
+            "explore",
+            "learn",
+            "deep_dive",
+            "review",
+            "challenge",
+            "source",
+            "exam",
+            "project",
+            "teach_back"
+          ]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "revisionChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "entity_type", "entity_id", "summary", "extensions"],
+      "properties": {
+        "operation": {
+          "enum": ["add", "update", "merge", "archive", "relabel", "reorganize", "collapse", "expand", "set"]
+        },
+        "entity_type": {
+          "enum": [
+            "contract",
+            "learner_profile",
+            "node",
+            "edge",
+            "map_view",
+            "question",
+            "frontier",
+            "route",
+            "evidence",
+            "mastery_node",
+            "mastery_edge",
+            "misconception",
+            "example",
+            "representation",
+            "review_item",
+            "source",
+            "source_reference",
+            "artifact",
+            "session_summary",
+            "extension"
+          ]
+        },
+        "entity_id": {
+          "$ref": "#/$defs/nullableIdentifier"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "revisionEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "state_version", "occurred_at", "kind", "reason", "triggering_evidence_ids", "changes", "extensions"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "state_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurred_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "kind": {
+          "enum": [
+            "initialized",
+            "contract_updated",
+            "diagnostic_update",
+            "diagnostic_replan",
+            "learning_update",
+            "misconception_repair",
+            "map_reorganized",
+            "review_update",
+            "source_update",
+            "artifact_update",
+            "session_closed",
+            "other"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "triggering_evidence_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "changes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/revisionChange"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    }
+  }
+}

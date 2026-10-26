@@ -1,0 +1,23 @@
+{
+  "scale": 4,
+  "primitives": [
+    {"type": "arrows", "color": "#ffffff"}
+  ],
+  "parts": [
+    {"name": "pulmonary_veins", "seeds": [[65, 150], [70, 190], [300, 135], [300, 185]], "smooth": "organ"},
+    {"name": "vein_ends", "seeds": [[322, 140], [330, 172]], "smooth": "detail"},
+    {"name": "pulmonary_artery", "seeds": [[80, 105], [175, 170], [270, 92], [240, 110]], "smooth": "organ"},
+    {"name": "artery_end", "seeds": [[300, 100]], "smooth": "detail"},
+    {"name": "aorta", "seeds": [[170, 140], [200, 70]], "smooth": "organ"},
+    {"name": "aorta_dark", "seeds": [[158, 30], [200, 20], [237, 28], [210, 212]], "smooth": "detail"},
+    {"name": "vena_cava", "seeds": [[115, 80], [100, 40], [100, 345]], "smooth": "organ"},
+    {"name": "heart_wall", "seeds": [[90, 270], [320, 300]], "smooth": "organ"},
+    {"name": "atria", "seeds": [[120, 200], [225, 165]], "smooth": "layer"},
+    {"name": "ventricles", "seeds": [[200, 300], [280, 260]], "smooth": "layer"},
+    {"name": "cava_openings", "seeds": [[120, 155], [125, 230]], "smooth": "detail"},
+    {"name": "vein_opening", "seeds": [[255, 165]], "smooth": "detail"},
+    {"name": "pulmonary_valve", "seeds": [[180, 212]], "smooth": "detail"},
+    {"name": "white_details", "colors": ["#ffffff"], "smooth": "sharp"},
+    {"name": "ink", "colors": ["#000000"], "tolerance": 35, "fill_holes": false, "close": 0, "smooth": "detail", "draw": "strokes"}
+  ]
+}

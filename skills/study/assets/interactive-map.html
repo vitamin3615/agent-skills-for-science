@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Study interactive map</title>
+
+  <!-- ## Viewer styles -->
+  <!-- ## Keep relationships readable and usable without color alone. -->
+  <style>
+    :root {
+      color-scheme: light dark;
+      --background: #f7f8fb;
+      --surface: #ffffff;
+      --ink: #172033;
+      --muted: #536078;
+      --line: #667085;
+      --accent: #1d4ed8;
+      --accent-soft: #dbeafe;
+      --border: #c8cfdb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #111827;
+        --surface: #1f2937;
+        --ink: #f8fafc;
+        --muted: #cbd5e1;
+        --line: #cbd5e1;
+        --accent: #93c5fd;
+        --accent-soft: #1e3a5f;
+        --border: #64748b;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--ink);
+      font: 16px/1.45 system-ui, sans-serif;
+    }
+    main { max-width: 1180px; margin: 0 auto; padding: 1.25rem; }
+    h1 { margin: 0 0 0.35rem; font-size: 1.6rem; }
+    p { margin: 0.35rem 0 1rem; }
+    .controls, .details, .linear-map {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.65rem;
+      padding: 0.9rem;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    label { display: grid; gap: 0.25rem; font-weight: 650; }
+    input, select, button {
+      min-height: 2.5rem;
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      padding: 0.45rem 0.6rem;
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+    }
+    button { cursor: pointer; font-weight: 700; }
+    button:focus, input:focus, select:focus { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .status { color: var(--muted); flex-basis: 100%; }
+    .layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(250px, 1fr); gap: 1rem; }
+    .canvas {
+      min-height: 620px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.65rem;
+      overflow: auto;
+    }
+    svg { width: 100%; min-width: 720px; min-height: 620px; display: block; }
+    .edge { stroke: var(--line); stroke-width: 1.8; fill: none; }
+    .edge-label { fill: var(--ink); font-size: 12px; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; }
+    .node rect { fill: var(--surface); stroke: var(--line); stroke-width: 2; rx: 9; }
+    .node text { fill: var(--ink); font-size: 13px; pointer-events: none; }
+    .node.current rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 4; }
+    .node button { all: unset; }
+    .details h2, .linear-map h2 { margin-top: 0; font-size: 1.1rem; }
+    .details dl { margin: 0; }
+    .details dt { font-weight: 750; margin-top: 0.55rem; }
+    .details dd { margin-left: 0; color: var(--muted); }
+    .linear-map { margin-top: 1rem; }
+    .linear-map li { margin-bottom: 0.4rem; }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    @media (max-width: 850px) { .layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Study interactive map</h1>
+  <p id="anchor">Load a Study <code>session_state.json</code> file.</p>
+
+  <section class="controls" aria-label="Map controls">
+    <label>State file
+      <input id="state-file" type="file" accept="application/json,.json">
+    </label>
+    <label>Zoom
+      <select id="zoom">
+        <option value="context">Context</option>
+        <option value="core" selected>Core</option>
+        <option value="neighborhood">Neighborhood</option>
+      </select>
+    </label>
+    <label><span>Visibility</span>
+      <span><input id="show-collapsed" type="checkbox"> Show collapsed nodes</span>
+    </label>
+    <button id="reset" type="button">Reset view</button>
+    <div id="status" class="status" role="status" aria-live="polite">No state loaded.</div>
+  </section>
+
+  <div class="layout">
+    <section class="canvas" aria-label="Interactive semantic graph">
+      <svg id="map" viewBox="0 0 900 620" role="img" aria-labelledby="map-title map-description">
+        <title id="map-title">Knowledge map</title>
+        <desc id="map-description">Load a state file to display labeled nodes and relationships.</desc>
+      </svg>
+    </section>
+    <aside class="details" aria-live="polite">
+      <h2>Current selection</h2>
+      <div id="details">Select a node to inspect its explanation and status.</div>
+    </aside>
+  </div>
+
+  <section class="linear-map">
+    <h2>Linear relationship view</h2>
+    <p>This list carries the same relationships for screen readers and text-first study.</p>
+    <ul id="edge-list"><li>No relationships loaded.</li></ul>
+  </section>
+</main>
+
+<!-- ## Viewer behavior -->
+<!-- ## Parse one portable state file and render only selected visible view. -->
+<script>
+  const fileInput = document.querySelector("#state-file");
+  const zoomInput = document.querySelector("#zoom");
+  const collapsedInput = document.querySelector("#show-collapsed");
+  const resetButton = document.querySelector("#reset");
+  const svg = document.querySelector("#map");
+  const status = document.querySelector("#status");
+  const anchor = document.querySelector("#anchor");
+  const details = document.querySelector("#details");
+  const edgeList = document.querySelector("#edge-list");
+  let learningState = null;
+
+  /** Escape text before inserting it into HTML. Parameter: unknown value. Returns safe text. */
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"
+    })[character]);
+  }
+
+  /** Select nodes for requested zoom and collapse policy. Parameters: state object, zoom name, boolean. Returns node array. */
+  function selectNodes(state, zoom, showCollapsed) {
+    const view = state.map_views?.[zoom] ?? {};
+    const selectedIds = new Set(view.visible_node_ids ?? []);
+    if (showCollapsed) {
+      (view.collapsed_node_ids ?? []).forEach(nodeId => selectedIds.add(nodeId));
+    }
+    return (state.nodes ?? []).filter(node => selectedIds.has(node.id) && node.lifecycle === "active");
+  }
+
+  /** Select edges for the requested view. Parameters: state object, nodes, zoom name, collapse policy. Returns edge array. */
+  function selectEdges(state, nodes, zoom, showCollapsed) {
+    const nodeIds = new Set(nodes.map(node => node.id));
+    const visibleEdgeIds = new Set(state.map_views?.[zoom]?.visible_edge_ids ?? []);
+    return (state.edges ?? []).filter(edge =>
+      edge.lifecycle === "active" &&
+      nodeIds.has(edge.source_node_id) &&
+      nodeIds.has(edge.target_node_id) &&
+      (showCollapsed || visibleEdgeIds.has(edge.id))
+    );
+  }
+
+  /** Build deterministic circular positions. Parameters: nodes and canvas dimensions. Returns ID-position map. */
+  function positionNodes(nodes, width, height) {
+    const positions = new Map();
+    const radius = Math.max(120, Math.min(width, height) * 0.42);
+    nodes.forEach((node, index) => {
+      const angle = -Math.PI / 2 + (2 * Math.PI * index / Math.max(nodes.length, 1));
+      positions.set(node.id, {
+        x: width / 2 + radius * Math.cos(angle),
+        y: height / 2 + radius * Math.sin(angle)
+      });
+    });
+    return positions;
+  }
+
+  /** Show learner-facing node details. Parameter: node record. Returns nothing. */
+  function showDetails(node) {
+    const mastery = learningState?.mastery_by_node?.[node.id];
+    details.innerHTML = `
+      <dl>
+        <dt>Label</dt><dd>${escapeHtml(node.label)}</dd>
+        <dt>Type</dt><dd>${escapeHtml(node.type)}</dd>
+        <dt>Explanation</dt><dd>${escapeHtml(node.learner_friendly_explanation || "Not recorded")}</dd>
+        <dt>Epistemic status</dt><dd>${escapeHtml(node.epistemic_status?.kind || "Not recorded")}</dd>
+        <dt>Mastery</dt><dd>${mastery ? `${escapeHtml(mastery.level)}/5` : "Not assessed"}</dd>
+        <dt>Why visible</dt><dd>${escapeHtml(node.relevance?.explanation || "Not recorded")}</dd>
+      </dl>`;
+  }
+
+  /** Create one SVG element with attributes. Parameters: tag and attribute object. Returns SVG element. */
+  function svgElement(tag, attributes) {
+    const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    Object.entries(attributes).forEach(([name, value]) => element.setAttribute(name, value));
+    return element;
+  }
+
+  /** Render current view into SVG and accessible edge list. Parameters: none. Returns nothing. */
+  function render() {
+    if (!learningState) return;
+    const zoom = zoomInput.value;
+    const nodes = selectNodes(learningState, zoom, collapsedInput.checked);
+    const edges = selectEdges(learningState, nodes, zoom, collapsedInput.checked);
+    const positions = positionNodes(nodes, 900, 620);
+    svg.replaceChildren();
+
+    const title = svgElement("title", {id: "map-title"});
+    title.textContent = `${zoom} knowledge map`;
+    const description = svgElement("desc", {id: "map-description"});
+    description.textContent = `${nodes.length} nodes and ${edges.length} labeled relationships.`;
+    svg.append(title, description);
+
+    const definitions = svgElement("defs", {});
+    const marker = svgElement("marker", {id: "arrow", viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse"});
+    marker.append(svgElement("path", {d: "M 0 0 L 10 5 L 0 10 z", fill: "currentColor"}));
+    definitions.append(marker);
+    svg.append(definitions);
+
+    edges.forEach(edge => {
+      const source = positions.get(edge.source_node_id);
+      const target = positions.get(edge.target_node_id);
+      const lineAttributes = {
+        x1: source.x,
+        y1: source.y,
+        x2: target.x,
+        y2: target.y,
+        class: "edge",
+        "marker-end": "url(#arrow)"
+      };
+      if (edge.directionality === "bidirectional") lineAttributes["marker-start"] = "url(#arrow)";
+      const line = svgElement("line", lineAttributes);
+      const label = svgElement("text", {x: (source.x + target.x) / 2, y: (source.y + target.y) / 2 - 7, class: "edge-label", "text-anchor": "middle"});
+      label.textContent = edge.label;
+      svg.append(line, label);
+    });
+
+    nodes.forEach(node => {
+      const position = positions.get(node.id);
+      const group = svgElement("g", {class: `node${node.id === learningState.current_node_id ? " current" : ""}`, tabindex: "0", role: "button", "aria-label": `${node.label}, ${node.type}`});
+      group.append(svgElement("rect", {x: position.x - 65, y: position.y - 25, width: "130", height: "50"}));
+      const label = svgElement("text", {x: position.x, y: position.y + 5, "text-anchor": "middle"});
+      label.textContent = node.label.length > 18 ? `${node.label.slice(0, 16)}…` : node.label;
+      group.append(label);
+      group.addEventListener("click", () => showDetails(node));
+      group.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") showDetails(node);
+      });
+      svg.append(group);
+    });
+
+    edgeList.innerHTML = edges.length
+      ? edges.map(edge => {
+          const source = nodes.find(node => node.id === edge.source_node_id)?.label ?? edge.source_node_id;
+          const target = nodes.find(node => node.id === edge.target_node_id)?.label ?? edge.target_node_id;
+          const arrow = edge.directionality === "bidirectional" ? "↔" : "→";
+          return `<li><strong>${escapeHtml(source)}</strong> —${escapeHtml(edge.label)}${arrow} <strong>${escapeHtml(target)}</strong>. ${escapeHtml(edge.explanation)}</li>`;
+        }).join("")
+      : "<li>No relationships in this view.</li>";
+    status.textContent = `Showing ${nodes.length} nodes and ${edges.length} relationships at ${zoom} zoom.`;
+  }
+
+  /** Parse selected JSON state. Parameter: file-input change event. Returns a promise. */
+  async function loadState(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      learningState = JSON.parse(await file.text());
+      anchor.textContent = `Anchor question: ${learningState.anchor_question || "Not recorded"}`;
+      zoomInput.value = learningState.current_zoom_level || "core";
+      render();
+    } catch (error) {
+      learningState = null;
+      status.textContent = `Could not load state: ${error.message}`;
+    }
+  }
+
+  fileInput.addEventListener("change", loadState);
+  zoomInput.addEventListener("change", render);
+  collapsedInput.addEventListener("change", render);
+  resetButton.addEventListener("click", () => {
+    zoomInput.value = learningState?.current_zoom_level || "core";
+    collapsedInput.checked = false;
+    details.textContent = "Select a node to inspect its explanation and status.";
+    render();
+  });
+</script>
+</body>
+</html>

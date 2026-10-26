@@ -1,0 +1,21 @@
+{
+  "scale": 4,
+  "drop": {"grey_text": true},
+  "background": {"seeds": [[330, 280], [5, 5], [100, 240], [130, 40], [340, 150]]},
+  "primitives": [
+    {"type": "circle", "name": "backdrop_circle", "fit_color": "#b49dcb", "tolerance": 12, "z": "bottom"},
+    {"type": "leaders"}
+  ],
+  "parts": [
+    {"name": "left_tube", "seeds": [[12, 120], [70, 68]], "smooth": "organ"},
+    {"name": "left_fan", "parent": "left_tube", "seeds": [[45, 112]], "tones": 2},
+    {"name": "right_tube", "seeds": [[330, 120], [290, 68]], "smooth": "organ"},
+    {"name": "right_fan", "parent": "right_tube", "seeds": [[300, 112]], "tones": 2},
+    {"name": "uterus", "seeds": [[172, 52], [120, 78], [150, 262], [195, 262], [132, 115], [211, 115]], "smooth": "organ"},
+    {"name": "lens", "parent": "uterus", "seeds": [[172, 68]]},
+    {"name": "myometrium", "parent": "uterus", "seeds": [[128, 130], [217, 130]], "close": 0},
+    {"name": "cavity", "parent": "uterus", "seeds": [[172, 110], [172, 240]]},
+    {"name": "left_ovary", "seeds": [[60, 160]], "tones": 2, "smooth": "detail", "stroke": "#efccca"},
+    {"name": "right_ovary", "seeds": [[270, 150]], "tones": 2, "smooth": "fine", "stroke": "#b7a2cd"}
+  ]
+}

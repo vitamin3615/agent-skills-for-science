@@ -1,0 +1,92 @@
+<figure class="fig fig--wide" id="viz-rf">
+<svg role="img" aria-label="Rows of cells, one row per layer. The cells inside the receptive field of the middle output position are filled amber; the field widens with each conv plus pool stage." viewBox="0 0 640 230" style="width:100%;min-width:480px;height:auto;display:block">
+  <g data-rows></g>
+</svg>
+<div class="viz-controls">
+  <label>Depth <input type="range" min="0" max="4" step="1" value="2" data-depth aria-label="Number of conv plus pool stages"></label>
+  <button type="button" data-play>Play</button>
+  <span class="viz-readout" data-readout aria-live="polite"></span>
+</div>
+<figcaption><span class="cap-label">Example</span>Each conv (kernel 5) plus pool (stride 2) stage adds <code>5 × jump</code> input bases to the receptive field and doubles the jump, so the field grows roughly ×2.3 per stage while the number of positions halves.</figcaption>
+<script>
+(function () {
+  var fig = document.getElementById("viz-rf");
+  var NS = "http://www.w3.org/2000/svg";
+  var N = 128, CELL = 5, MAXD = 4, ROW = 44, TOP = 12;
+  var rows = fig.querySelector("[data-rows]");
+  var slider = fig.querySelector("[data-depth]");
+  var readout = fig.querySelector("[data-readout]");
+  var play = fig.querySelector("[data-play]");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var cells = [];   // cells[j][i]
+  var labels = [];
+
+  // build rows 0..MAXD; row j has N / 2^j cells, each 2^j * CELL wide so they stack like a pyramid
+  for (var j = 0; j <= MAXD; j++) {
+    cells[j] = [];
+    var n = N >> j, w = CELL << j;
+    for (var i = 0; i < n; i++) {
+      var r = document.createElementNS(NS, "rect");
+      r.setAttribute("x", i * w + 0.5);
+      r.setAttribute("y", TOP + (MAXD - j) * ROW);
+      r.setAttribute("width", w - 1);
+      r.setAttribute("height", 16);
+      r.style.stroke = "var(--rule)";
+      r.style.strokeWidth = "0.6";
+      rows.appendChild(r);
+      cells[j][i] = r;
+    }
+    var t = document.createElementNS(NS, "text");
+    t.setAttribute("x", 0);
+    t.setAttribute("y", TOP + (MAXD - j) * ROW + 32);
+    t.style.fill = "var(--muted)";
+    t.style.font = "11px var(--f-display)";
+    rows.appendChild(t);
+    labels[j] = t;
+  }
+
+  // interval of row-j cells seen by the middle cell of row d, walking down through conv(5) and pool(2)
+  function field(d) {
+    var lo = (N >> d) >> 1, hi = lo, out = [];
+    out[d] = [lo, hi];
+    for (var j = d; j > 0; j--) {
+      lo = 2 * lo; hi = 2 * hi + 1;   // pool stride 2: one cell covers two
+      lo -= 2; hi += 2;                // conv kernel 5: two neighbours each side
+      lo = Math.max(lo, 0); hi = Math.min(hi, (N >> (j - 1)) - 1);
+      out[j - 1] = [lo, hi];
+    }
+    return out;
+  }
+
+  function draw(d) {
+    var f = field(d);
+    for (var j = 0; j <= MAXD; j++) {
+      var shown = j <= d;
+      cells[j].forEach(function (c, i) {
+        var inside = shown && i >= f[j][0] && i <= f[j][1];
+        var center = j === d && i === f[d][0];
+        c.style.fill = center ? "var(--accent)" : inside ? "var(--mark)" : "var(--panel)";
+        c.style.opacity = shown ? "1" : "0.25";
+      });
+      labels[j].textContent = j === 0 ? "input, 1 bp per cell" : "after stage " + j + " (" + (1 << j) + " bp per cell)";
+    }
+    var span = f[0][1] - f[0][0] + 1;
+    readout.innerHTML = "depth <b>" + d + "</b>: receptive field <b>" + span + "</b> bp of " + N;
+  }
+
+  slider.addEventListener("input", function () { draw(+slider.value); });
+  var timer = null;
+  play.disabled = reduce.matches;
+  play.addEventListener("click", function () {
+    if (timer) { clearInterval(timer); timer = null; play.textContent = "Play"; return; }
+    slider.value = 0; draw(0); play.textContent = "Stop";
+    timer = setInterval(function () {
+      var d = +slider.value + 1;
+      if (d > MAXD) { clearInterval(timer); timer = null; play.textContent = "Play"; return; }
+      slider.value = d; draw(d);
+    }, 800);
+  });
+  draw(+slider.value);
+})();
+</script>
+</figure>
